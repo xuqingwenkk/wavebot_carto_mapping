@@ -282,7 +282,10 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
               : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
-      occupancy_grid.data.push_back(value);
+      int cell_value = -1;
+      if(value != -1)
+        cell_value = value > 50 ? 100 : 0;
+      occupancy_grid.data.push_back(cell_value);
     }
   }
   occupancy_grid_publisher_.publish(occupancy_grid);
