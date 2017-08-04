@@ -248,6 +248,62 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
   }
 }
 
+    void MedianFilterOccupancyGrid(::nav_msgs::OccupancyGrid& occupancy_grid,
+                      float occupancy_threshold){
+        // do nothing for border
+        for(size_t y = 1; y < occupancy_grid.info.height - 1; ++y){
+            for(size_t x = 1; x < occupancy_grid.info.width - 1; ++x){
+                auto& cell_value = occupancy_grid.data[y*occupancy_grid.info.width + x];
+                if(cell_value < 0 || cell_value > occupancy_threshold) {
+                    for(size_t i = y-1; i <= y+1; i++){
+                        for(size_t j = x-1; j <= x+1; j++){
+                            cell_value += occupancy_grid.data[i*occupancy_grid.info.width + j];
+                        }
+                    }
+                    cell_value /= 10;
+                    if(cell_value > (occupancy_threshold)*0.1)
+                        cell_value = 100;
+                    else
+                        cell_value = cell_value > 1 ? 0 : -1;
+                }else{
+                    cell_value = 0;
+                }
+            }
+        }
+    }
+
+    void FilterOccupancyGrid(::nav_msgs::OccupancyGrid& occupancy_grid,
+                             float occupancy_threshold) {
+        for(size_t y = 0; y < occupancy_grid.info.height; ++y) {
+            for(size_t x = 0; x < occupancy_grid.info.width; ++x) {
+                auto& cell_value = occupancy_grid.data[y*occupancy_grid.info.width + x];
+                size_t count = 0, no_occ = 0;
+                if(cell_value < 0 || cell_value > occupancy_threshold) {
+                    for(size_t i = (y>0?y-2:0);
+                        i <= (y+2<occupancy_grid.info.height?y+2:occupancy_grid.info.height);
+                        ++i) {
+                        for(size_t j = (x>0?x-2:0);
+                            j <= (x+2<occupancy_grid.info.width?x+2:occupancy_grid.info.width);
+                            ++j) {
+                            auto value = occupancy_grid.data[i*occupancy_grid.info.width + j];
+                            ++count;
+                            if(value > 0 && value < occupancy_threshold) {
+                                ++no_occ;
+                            }
+                        }
+                    }
+                    if(no_occ > count/2){
+                        cell_value = 0;
+                    }else{
+                        cell_value = cell_value > 0 ? 100 : -1;
+                    }
+                }else{
+                    cell_value = 0;
+                }
+            }
+        }
+    }
+
 void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
                                 const Eigen::Array2f& origin,
                                 const Eigen::Array2i& size,
@@ -282,12 +338,11 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
               : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
-      int cell_value = -1;
-      if(value != -1)
-        cell_value = value > 50 ? 100 : 0;
-      occupancy_grid.data.push_back(cell_value);
+      occupancy_grid.data.push_back(value);
     }
   }
+
+  MedianFilterOccupancyGrid(occupancy_grid, 50);
   occupancy_grid_publisher_.publish(occupancy_grid);
 }
 
