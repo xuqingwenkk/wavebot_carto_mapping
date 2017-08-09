@@ -96,6 +96,7 @@ class ActiveSubmaps {
   void FinishSubmap();
   void AddSubmap(const Eigen::Vector2f& origin);
 
+  const int kNumSubmap_ = 4;
   const proto::SubmapsOptions options_;
   int matching_submap_index_ = 0;
   std::vector<std::shared_ptr<Submap>> submaps_;

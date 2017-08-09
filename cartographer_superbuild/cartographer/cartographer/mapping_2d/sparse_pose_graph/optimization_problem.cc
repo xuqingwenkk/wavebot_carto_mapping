@@ -83,6 +83,13 @@ void OptimizationProblem::AddTrajectoryNode(
   trajectory_data_.resize(std::max(trajectory_data_.size(), node_data_.size()));
 }
 
+void OptimizationProblem::RemoveTrajectoryNode(int trajectory_id) {
+  node_data_.resize(
+          std::max(node_data_.size(), static_cast<size_t>(trajectory_id) + 1));
+  node_data_[trajectory_id].erase(node_data_[trajectory_id].begin());
+  trajectory_data_.resize(std::max(trajectory_data_.size(), node_data_.size()));
+}
+
 void OptimizationProblem::TrimTrajectoryNode(const mapping::NodeId& node_id) {
   auto& trajectory_data = trajectory_data_.at(node_id.trajectory_id);
   // We only allow trimming from the start.
@@ -110,6 +117,14 @@ void OptimizationProblem::AddSubmap(const int trajectory_id,
       std::max(trajectory_data_.size(), submap_data_.size()));
 }
 
+void OptimizationProblem::RemoveSubmap(int trajectory_id) {
+  submap_data_.resize(
+      std::max(submap_data_.size(), static_cast<size_t>(trajectory_id) + 1));
+  submap_data_[trajectory_id].erase(submap_data_[trajectory_id].begin());
+  trajectory_data_.resize(
+          std::max(trajectory_data_.size(), submap_data_.size()));
+}
+
 void OptimizationProblem::TrimSubmap(const mapping::SubmapId& submap_id) {
   auto& trajectory_data = trajectory_data_.at(submap_id.trajectory_id);
   // We only allow trimming from the start.
@@ -127,6 +142,7 @@ void OptimizationProblem::SetMaxNumIterations(const int32 max_num_iterations) {
 
 void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
                                 const std::set<int>& frozen_trajectories) {
+
   if (node_data_.empty()) {
     // Nothing to optimize.
     return;
@@ -176,6 +192,11 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
 
   // Add cost functions for intra- and inter-submap constraints.
   for (const Constraint& constraint : constraints) {
+    LOG(INFO) << "constraint node length is " << C_nodes.at(constraint.node_id.trajectory_id).size();
+    LOG(INFO) << "constraint node id is " << constraint.node_id;
+    LOG(INFO) << "constraint node index is " << constraint.node_id.node_index -
+                                                trajectory_data_.at(constraint.node_id.trajectory_id)
+                                                        .num_trimmed_nodes;
     problem.AddResidualBlock(
         new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
             new SpaCostFunction(constraint.pose)),
@@ -233,8 +254,10 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     for (size_t submap_data_index = 0;
          submap_data_index != submap_data_[trajectory_id].size();
          ++submap_data_index) {
+      LOG(INFO) << "before optimization, submap pose is " << submap_data_[trajectory_id][submap_data_index].pose;
       submap_data_[trajectory_id][submap_data_index].pose =
           ToPose(C_submaps[trajectory_id][submap_data_index]);
+      LOG(INFO) << "after optimization, submap pose is " << submap_data_[trajectory_id][submap_data_index].pose;
     }
   }
   for (size_t trajectory_id = 0; trajectory_id != node_data_.size();

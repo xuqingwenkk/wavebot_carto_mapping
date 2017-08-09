@@ -338,11 +338,16 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
               : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
-      occupancy_grid.data.push_back(value);
+      int cell_value = -1;
+      if(value > 50)
+          cell_value = 100;
+      else
+          cell_value = value != -1 ? 0 : -1;
+      occupancy_grid.data.push_back(cell_value);
     }
   }
 
-  MedianFilterOccupancyGrid(occupancy_grid, 50);
+  //FilterOccupancyGrid(occupancy_grid, 50);
   occupancy_grid_publisher_.publish(occupancy_grid);
 }
 

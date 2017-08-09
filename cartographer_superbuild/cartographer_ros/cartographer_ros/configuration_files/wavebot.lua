@@ -45,8 +45,8 @@ TRAJECTORY_BUILDER_2D.min_range = 0.3
 TRAJECTORY_BUILDER_2D.max_range = 8.
 
 -- Made submaps bigger since the laser is not so good made resolution bigger -> less features.
-TRAJECTORY_BUILDER_2D.submaps.num_range_data = 35
-TRAJECTORY_BUILDER_2D.submaps.resolution = 0.02        
+--TRAJECTORY_BUILDER_2D.submaps.num_range_data = 35
+--TRAJECTORY_BUILDER_2D.submaps.resolution = 0.02        
 
 -- TRAJECTORY_BUILDER_2D.missing_data_ray_length = 1.
 TRAJECTORY_BUILDER_2D.use_imu_data = false
@@ -55,13 +55,13 @@ TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = false
 --TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.translation_delta_cost_weight = 10.
 --TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.rotation_delta_cost_weight = 1e-1
 
-SPARSE_POSE_GRAPH.optimization_problem.huber_scale = 1e2
+SPARSE_POSE_GRAPH.optimization_problem.huber_scale = 1e1
 SPARSE_POSE_GRAPH.optimize_every_n_scans = 35
-SPARSE_POSE_GRAPH.constraint_builder.min_score = 0.8
-SPARSE_POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.linear_search_window = 5.
+SPARSE_POSE_GRAPH.constraint_builder.min_score = 1.0
+--SPARSE_POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher.linear_search_window = 5.
 --SPARSE_POSE_GRAPH.constraint_builder.ceres_scan_matcher.covariance_scale = 1e-2
 
 SPARSE_POSE_GRAPH.constraint_builder.ceres_scan_matcher = TRAJECTORY_BUILDER_2D.ceres_scan_matcher
-SPARSE_POSE_GRAPH.constraint_builder.global_localization_min_score = 0.8
+SPARSE_POSE_GRAPH.constraint_builder.global_localization_min_score = 1.0
 
 return options

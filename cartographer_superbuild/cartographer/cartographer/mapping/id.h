@@ -18,6 +18,7 @@
 #define CARTOGRAPHER_MAPPING_ID_H_
 
 #include <algorithm>
+#include <iostream>
 #include <ostream>
 #include <tuple>
 #include <vector>
@@ -76,6 +77,14 @@ class NestedVectorsById {
     return id;
   }
 
+  IdType EraseHead(int trajectory_id){
+    data_.resize(std::max<size_t>(data_.size(), trajectory_id + 1));
+    data_[trajectory_id].erase(data_[trajectory_id].begin());
+    const IdType id{trajectory_id,
+                    static_cast<int>(data_[trajectory_id].size())};
+    return id;
+  }
+
   const ValueType& at(const IdType& id) const {
     return data_.at(id.trajectory_id).at(GetIndex(id));
   }
@@ -87,6 +96,13 @@ class NestedVectorsById {
   int num_indices(int trajectory_id) const {
     return static_cast<int>(data_.at(trajectory_id).size());
   }
+
+
+  void RemoveData(int trajectory_id){
+      data_[trajectory_id].erase(data_[trajectory_id].begin());
+  }
+
+
 
   // TODO(whess): Remove once no longer needed.
   const std::vector<std::vector<ValueType>> data() const { return data_; }

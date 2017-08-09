@@ -37,11 +37,13 @@ void GlobalTrajectoryBuilder::AddRangefinderData(
   if (insertion_result == nullptr) {
     return;
   }
+  // Insert scan into submap at best estimated pose
   sparse_pose_graph_->AddScan(
       insertion_result->time, insertion_result->tracking_to_tracking_2d,
       insertion_result->range_data_in_tracking_2d,
       insertion_result->pose_estimate_2d, trajectory_id_,
       std::move(insertion_result->insertion_submaps));
+
 }
 
 void GlobalTrajectoryBuilder::AddImuData(

@@ -168,6 +168,7 @@ void ActiveSubmaps::FinishSubmap() {
   Submap* submap = submaps_.front().get();
   submap->Finish();
   ++matching_submap_index_;
+  //keep the length of submap
   submaps_.erase(submaps_.begin());
 }
 
