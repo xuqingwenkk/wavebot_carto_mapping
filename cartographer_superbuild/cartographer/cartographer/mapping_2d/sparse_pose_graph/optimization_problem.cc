@@ -193,6 +193,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
   // Add cost functions for intra- and inter-submap constraints.
   for (const Constraint& constraint : constraints) {
     LOG(INFO) << "constraint node length is " << C_nodes.at(constraint.node_id.trajectory_id).size();
+    LOG(INFO) << "constraint length is " << constraints.size();
     LOG(INFO) << "constraint node id is " << constraint.node_id;
     LOG(INFO) << "constraint node index is " << constraint.node_id.node_index -
                                                 trajectory_data_.at(constraint.node_id.trajectory_id)

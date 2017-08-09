@@ -100,7 +100,6 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
   std::vector<Constraint> constraints() override EXCLUDES(mutex_);
 
  private:
-
   const int kNumSubmap_ = 100;
   const int kNumTrajectoryNode_ = 100;
   // The current state of the submap in the background threads. When this
@@ -207,6 +206,8 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
       trajectory_nodes_ GUARDED_BY(mutex_);
   int num_trajectory_nodes_ GUARDED_BY(mutex_) = 0;
   int real_trajectory_nodes_ GUARDED_BY(mutex_) = 0;
+  int num_remove_ GUARDED_BY(mutex_) = 0;
+
 
   // Current submap transforms used for displaying data.
   std::vector<int> num_trimmed_submaps_at_last_optimization_ GUARDED_BY(mutex_);

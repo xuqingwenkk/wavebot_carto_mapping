@@ -234,7 +234,7 @@ void SparsePoseGraph::ComputeConstraintsForOldScans(
                                     static_cast<int>(node_index)};
       CHECK(!trajectory_nodes_.at(node_id).trimmed());
       if (submap_data.node_ids.count(node_id) == 0) {
-//        ComputeConstraint(node_id, submap_id);
+        ComputeConstraint(node_id, submap_id);
       }
     }
   }
@@ -288,33 +288,33 @@ void SparsePoseGraph::ComputeConstraintsForScan(
     // Even if this was the last scan added to 'submap_id', the submap will only
     // be marked as finished in 'submap_data_' further below.
     CHECK(submap_data_.at(submap_id).state == SubmapState::kActive);
-    LOG(INFO) << "num trajectory node is " << num_trajectory_nodes_
-              << " node id is " << node_id << ", submap id is " << submap_id;
-    submap_data_.at(submap_id).node_ids.emplace(node_id);
+    LOG(INFO) << " node id is " << node_id << ", submap id is " << submap_id;
+    LOG(INFO) << " scan node id is " << scan_node_id << ", submap id is " << submap_id;
+    LOG(INFO) << "optimization node data size is " << optimization_problem_.node_data().size();
+    submap_data_.at(submap_id).node_ids.emplace(scan_node_id);
     const transform::Rigid2d constraint_transform =
         sparse_pose_graph::ComputeSubmapPose(*insertion_submaps[i]).inverse() *
         pose;
-//    constraints_.push_back(Constraint{submap_id,
-//                                      node_id,
-//                                      {transform::Embed3D(constraint_transform),
-//                                       options_.matcher_translation_weight(),
-//                                       options_.matcher_rotation_weight()},
-//                                      Constraint::INTRA_SUBMAP});
+    constraints_.push_back(Constraint{submap_id,
+                                      scan_node_id,
+                                      {transform::Embed3D(constraint_transform),
+                                       options_.matcher_translation_weight(),
+                                       options_.matcher_rotation_weight()},
+                                      Constraint::INTRA_SUBMAP});
   }
 
-//  for (int trajectory_id = 0; trajectory_id < submap_data_.num_trajectories();
-//       ++trajectory_id) {
-//    for (int submap_index = 0;
-//         submap_index < submap_data_.num_indices(trajectory_id);
-//         ++submap_index) {
-//      const mapping::SubmapId submap_id{trajectory_id, submap_index};
-//      if (submap_data_.at(submap_id).state == SubmapState::kFinished) {
-//        CHECK_EQ(submap_data_.at(submap_id).node_ids.count(node_id), 0);
-//        ComputeConstraint(node_id, submap_id);
-//      }
-//    }
-//  }
-
+  for (int trajectory_id = 0; trajectory_id < submap_data_.num_trajectories();
+       ++trajectory_id) {
+    for (int submap_index = 0;
+         submap_index < submap_data_.num_indices(trajectory_id);
+         ++submap_index) {
+      const mapping::SubmapId submap_id{trajectory_id, submap_index};
+      if (submap_data_.at(submap_id).state == SubmapState::kFinished) {
+        CHECK_EQ(submap_data_.at(submap_id).node_ids.count(node_id), 0);
+        ComputeConstraint(scan_node_id, submap_id);
+      }
+    }
+  }
   if (newly_finished_submap) {
     const mapping::SubmapId finished_submap_id = submap_ids.front();
     SubmapData& finished_submap_data = submap_data_.at(finished_submap_id);
@@ -347,20 +347,12 @@ void SparsePoseGraph::HandleScanQueue() {
         }
         //LOG(INFO) << "run optimization";
         RunOptimization();
-
         common::MutexLocker locker(&mutex_);
         num_scans_since_last_loop_closure_ = 0;
         run_loop_closure_ = false;
         while (!run_loop_closure_) {
           if (scan_queue_->empty()) {
             LOG(INFO) << "We caught up. Hooray!";
-            while(static_cast<int>(trajectory_nodes_.data().at(0).size()) > kNumTrajectoryNode_){
-                trajectory_nodes_.RemoveData(0);
-                --real_trajectory_nodes_;
-            }
-            while(static_cast<int>(optimization_problem_.node_data().at(0).size()) > kNumTrajectoryNode_){
-              optimization_problem_.RemoveTrajectoryNode(0);
-            }
             scan_queue_.reset();
             return;
           }
@@ -370,6 +362,22 @@ void SparsePoseGraph::HandleScanQueue() {
         // We have to optimize again.
         HandleScanQueue();
       });
+    while(static_cast<int>(trajectory_nodes_.data().at(0).size()) > kNumTrajectoryNode_){
+        trajectory_nodes_.EraseHead(0);
+        --real_trajectory_nodes_;
+    }
+    while(static_cast<int>(optimization_problem_.node_data().at(0).size()) > kNumTrajectoryNode_){
+        optimization_problem_.RemoveTrajectoryNode(0);
+        ++num_remove_;
+    }
+    for(size_t i = 0; i < constraints_.size(); i++){
+        if(constraints_[i].node_id.node_index >= num_remove_){
+            constraints_[i].node_id.node_index -= num_remove_;
+        }else{
+            constraints_.erase(constraints_.begin()+i);
+        }
+    }
+    num_remove_ = 0;
 }
 
 void SparsePoseGraph::WaitForAllComputations() {
