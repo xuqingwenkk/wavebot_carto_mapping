@@ -76,6 +76,10 @@ class NestedVectorsById {
     return id;
   }
 
+  void Erase(int trajectory_id, int index = 0){
+    data_[trajectory_id].erase(data_[trajectory_id].begin()+index);
+  }
+
   const ValueType& at(const IdType& id) const {
     return data_.at(id.trajectory_id).at(GetIndex(id));
   }

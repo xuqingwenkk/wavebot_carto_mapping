@@ -83,6 +83,11 @@ void OptimizationProblem::AddTrajectoryNode(
   trajectory_data_.resize(std::max(trajectory_data_.size(), node_data_.size()));
 }
 
+void OptimizationProblem::RemoveTrajectoryNode(int trajectory_id, int node_index) {
+  CHECK_GE(trajectory_id, 0);
+  node_data_[trajectory_id].erase(node_data_[trajectory_id].begin() + node_index);
+}
+
 void OptimizationProblem::TrimTrajectoryNode(const mapping::NodeId& node_id) {
   auto& trajectory_data = trajectory_data_.at(node_id.trajectory_id);
   // We only allow trimming from the start.
@@ -110,6 +115,12 @@ void OptimizationProblem::AddSubmap(const int trajectory_id,
       std::max(trajectory_data_.size(), submap_data_.size()));
 }
 
+void OptimizationProblem::RemoveSubmap(int trajectory_id, int submap_index) {
+  CHECK_GE(trajectory_id, 0);
+  submap_data_[trajectory_id].erase(
+          submap_data_[trajectory_id].begin() + submap_index);
+}
+
 void OptimizationProblem::TrimSubmap(const mapping::SubmapId& submap_id) {
   auto& trajectory_data = trajectory_data_.at(submap_id.trajectory_id);
   // We only allow trimming from the start.
@@ -135,6 +146,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
   ceres::Problem::Options problem_options;
   ceres::Problem problem(problem_options);
 
+  LOG(INFO) << "Solve 1......";
   // Set the starting point.
   // TODO(hrapp): Move ceres data into SubmapData.
   std::vector<std::vector<std::array<double, 3>>> C_submaps(
@@ -159,6 +171,9 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
       }
     }
   }
+
+  LOG(INFO) << "Solve 2......";
+
   for (size_t trajectory_id = 0; trajectory_id != node_data_.size();
        ++trajectory_id) {
     const bool frozen = frozen_trajectories.count(trajectory_id);
@@ -173,6 +188,8 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
       }
     }
   }
+
+  LOG(INFO) << "Solve 3......";
 
   // Add cost functions for intra- and inter-submap constraints.
   for (const Constraint& constraint : constraints) {
@@ -194,6 +211,8 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
                     .num_trimmed_nodes)
             .data());
   }
+
+  LOG(INFO) << "Solve 4......";
 
   // Add penalties for changes between consecutive scans.
   for (size_t trajectory_id = 0; trajectory_id != node_data_.size();
