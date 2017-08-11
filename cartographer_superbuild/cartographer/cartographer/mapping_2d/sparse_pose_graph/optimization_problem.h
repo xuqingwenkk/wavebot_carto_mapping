@@ -74,7 +74,11 @@ class OptimizationProblem {
 
   // Computes the optimized poses.
   void Solve(const std::vector<Constraint>& constraints,
-             const std::set<int>& frozen_trajectories);
+             const std::set<int>& frozen_trajectories,
+             const int submap_length,
+             const int submap_num,
+             const int node_length,
+             const int node_num);
 
   const std::vector<std::deque<NodeData>>& node_data() const;
   const std::vector<std::deque<SubmapData>>& submap_data() const;

@@ -106,8 +106,42 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
 //                             : node_id.node_index};
 //  }
 
+  mapping::NodeId NodeIdRemap(mapping::NodeId node_id){
+      return num_trajectory_nodes_ >= kNumTrajectoryNode_
+             ? mapping::NodeId{node_id.trajectory_id,
+                               kNumTrajectoryNode_ - (num_trajectory_nodes_ - node_id.node_index)}
+             : node_id;
+  }
+  mapping::NodeId ReverseNodeIdRemap(mapping::NodeId node_id){
+      return num_trajectory_nodes_ >= kNumTrajectoryNode_
+             ? mapping::NodeId{node_id.trajectory_id,
+                               node_id.node_index - kNumTrajectoryNode_ + num_trajectory_nodes_}
+             : node_id;
+  }
+  int NodeIdRemap(int node_index){
+      return num_trajectory_nodes_ >= kNumTrajectoryNode_
+             ? (kNumTrajectoryNode_ - (num_trajectory_nodes_ - node_index))
+             : node_index;
+  }
+
+  mapping::SubmapId SubmapIdRemap(mapping::SubmapId submap_id){
+      int submap_length = submap_data_.num_indices(submap_id.trajectory_id);
+      return num_submaps_ >= submap_length
+             ? mapping::SubmapId{submap_id.trajectory_id,
+                                 submap_length - (num_submaps_ - submap_id.submap_index)}
+             : submap_id;
+  }
+
+  mapping::SubmapId ReverseSubmapIdMap(mapping::SubmapId submap_id){
+      int submap_length = submap_data_.num_indices(submap_id.trajectory_id);
+      return num_submaps_ >= submap_length
+             ? mapping::SubmapId{submap_id.trajectory_id,
+                                 submap_id.submap_index - submap_length + num_submaps_}
+             : submap_id;
+  }
+
  private:
-  const int kNumTrajectoryNode_ = 20;
+  const int kNumTrajectoryNode_ = 40;
   // The current state of the submap in the background threads. When this
   // transitions to kFinished, all scans are tried to match against this submap.
   // Likewise, all new scans are matched against submaps which are finished.
@@ -211,6 +245,7 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
   mapping::NestedVectorsById<mapping::TrajectoryNode, mapping::NodeId>
       trajectory_nodes_ GUARDED_BY(mutex_);
   int num_trajectory_nodes_ GUARDED_BY(mutex_) = 0;
+  int num_submaps_ GUARDED_BY(mutex_) = 0;
 
 
   // Current submap transforms used for displaying data.

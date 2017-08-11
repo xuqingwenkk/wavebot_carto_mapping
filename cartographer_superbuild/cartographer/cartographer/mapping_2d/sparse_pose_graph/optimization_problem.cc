@@ -137,7 +137,11 @@ void OptimizationProblem::SetMaxNumIterations(const int32 max_num_iterations) {
 }
 
 void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
-                                const std::set<int>& frozen_trajectories) {
+                                const std::set<int>& frozen_trajectories,
+                                const int submap_length,
+                                const int submap_num,
+                                const int node_length,
+                                const int node_num) {
   if (node_data_.empty()) {
     // Nothing to optimize.
     return;
@@ -193,23 +197,44 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
 
   // Add cost functions for intra- and inter-submap constraints.
   for (const Constraint& constraint : constraints) {
+    mapping::SubmapId C_submap_id = constraint.submap_id;
+    if(submap_num > submap_length){
+        C_submap_id.submap_index = submap_length - (submap_num - constraint.submap_id.submap_index);
+    }
+    LOG(INFO) << constraint.submap_id << " Constraint submap id is" << C_submap_id;
+    mapping::NodeId C_node_id = constraint.node_id;
+    if(node_num > node_length){
+        C_node_id.node_index = node_length - (node_num - constraint.node_id.node_index);
+    }
+    LOG(INFO) << "node num is " << node_num;
+    LOG(INFO) << constraint.node_id << "Constraint node id is" << C_node_id;
     problem.AddResidualBlock(
-        new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
-            new SpaCostFunction(constraint.pose)),
-        // Only loop closure constraints should have a loss function.
-        constraint.tag == Constraint::INTER_SUBMAP
+            new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
+                    new SpaCostFunction(constraint.pose)),
+            constraint.tag == Constraint::INTER_SUBMAP
             ? new ceres::HuberLoss(options_.huber_scale())
             : nullptr,
-        C_submaps.at(constraint.submap_id.trajectory_id)
-            .at(constraint.submap_id.submap_index -
-                trajectory_data_.at(constraint.submap_id.trajectory_id)
-                    .num_trimmed_submaps)
-            .data(),
-        C_nodes.at(constraint.node_id.trajectory_id)
-            .at(constraint.node_id.node_index -
-                trajectory_data_.at(constraint.node_id.trajectory_id)
-                    .num_trimmed_nodes)
-            .data());
+            C_submaps.at(C_submap_id.trajectory_id)
+                    .at(C_submap_id.submap_index).data(),
+            C_nodes.at(C_node_id.trajectory_id)
+                    .at(C_node_id.node_index).data());
+//    problem.AddResidualBlock(
+//        new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
+//            new SpaCostFunction(constraint.pose)),
+//        // Only loop closure constraints should have a loss function.
+//        constraint.tag == Constraint::INTER_SUBMAP
+//            ? new ceres::HuberLoss(options_.huber_scale())
+//            : nullptr,
+//        C_submaps.at(constraint.submap_id.trajectory_id)
+//            .at(constraint.submap_id.submap_index -
+//                trajectory_data_.at(constraint.submap_id.trajectory_id)
+//                    .num_trimmed_submaps)
+//            .data(),
+//        C_nodes.at(constraint.node_id.trajectory_id)
+//            .at(constraint.node_id.node_index -
+//                trajectory_data_.at(constraint.node_id.trajectory_id)
+//                    .num_trimmed_nodes)
+//            .data());
   }
 
   LOG(INFO) << "Solve 4......";
