@@ -218,6 +218,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
                     .at(C_submap_id.submap_index).data(),
             C_nodes.at(C_node_id.trajectory_id)
                     .at(C_node_id.node_index).data());
+    LOG(INFO) << "Add Residual Block";
 //    problem.AddResidualBlock(
 //        new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
 //            new SpaCostFunction(constraint.pose)),

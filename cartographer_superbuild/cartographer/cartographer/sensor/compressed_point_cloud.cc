@@ -77,6 +77,7 @@ bool CompressedPointCloud::ConstIterator::operator!=(
 }
 
 void CompressedPointCloud::ConstIterator::ReadNextPoint() {
+  LOG(INFO) << "Read Next Point Begin";
   if (remaining_points_in_current_block_ == 0) {
     remaining_points_in_current_block_ = *input_++;
     for (int i = 0; i < 3; ++i) {
@@ -94,6 +95,8 @@ void CompressedPointCloud::ConstIterator::ReadNextPoint() {
   current_point_[2] =
       (current_block_coordinates_[2] + (point >> (2 * kBitsPerCoordinate))) *
       kPrecision;
+
+  LOG(INFO) << "Read Next Point End";
 }
 
 CompressedPointCloud::CompressedPointCloud(const PointCloud& point_cloud)

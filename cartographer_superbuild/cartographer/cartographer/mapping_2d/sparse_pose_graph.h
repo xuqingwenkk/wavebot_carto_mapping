@@ -124,7 +124,7 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
              : node_index;
   }
 
-  mapping::SubmapId SubmapIdRemap(mapping::SubmapId submap_id){
+  mapping::SubmapId SubmapIdRemap(mapping::SubmapId submap_id)const {
       int submap_length = submap_data_.num_indices(submap_id.trajectory_id);
       return num_submaps_ >= submap_length
              ? mapping::SubmapId{submap_id.trajectory_id,
@@ -141,7 +141,7 @@ class SparsePoseGraph : public mapping::SparsePoseGraph {
   }
 
  private:
-  const int kNumTrajectoryNode_ = 40;
+  const int kNumTrajectoryNode_ = 50;
   // The current state of the submap in the background threads. When this
   // transitions to kFinished, all scans are tried to match against this submap.
   // Likewise, all new scans are matched against submaps which are finished.
