@@ -147,8 +147,10 @@ void Node::HandleSubmapList(
   if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
     return;
   }
+  LOG(INFO) << "Handle Submap List";
   for (const auto& submap_msg : msg->submap) {
     const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
+    LOG(INFO) << "submap index is " << submap_msg.submap_index;
     SubmapState& submap_state = submaps_[id];
     submap_state.pose = ToRigid3d(submap_msg.pose);
     submap_state.metadata_version = submap_msg.submap_version;

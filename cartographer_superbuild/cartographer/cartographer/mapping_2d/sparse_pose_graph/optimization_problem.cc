@@ -150,7 +150,6 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
   ceres::Problem::Options problem_options;
   ceres::Problem problem(problem_options);
 
-  LOG(INFO) << "Solve 1......";
   // Set the starting point.
   // TODO(hrapp): Move ceres data into SubmapData.
   std::vector<std::vector<std::array<double, 3>>> C_submaps(
@@ -176,8 +175,6 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     }
   }
 
-  LOG(INFO) << "Solve 2......";
-
   for (size_t trajectory_id = 0; trajectory_id != node_data_.size();
        ++trajectory_id) {
     const bool frozen = frozen_trajectories.count(trajectory_id);
@@ -193,21 +190,19 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     }
   }
 
-  LOG(INFO) << "Solve 3......";
-
   // Add cost functions for intra- and inter-submap constraints.
   for (const Constraint& constraint : constraints) {
     mapping::SubmapId C_submap_id = constraint.submap_id;
     if(submap_num > submap_length){
         C_submap_id.submap_index = submap_length - (submap_num - constraint.submap_id.submap_index);
     }
-    LOG(INFO) << constraint.submap_id << " Constraint submap id is" << C_submap_id;
+//    LOG(INFO) << constraint.submap_id << " Constraint submap id is" << C_submap_id;
     mapping::NodeId C_node_id = constraint.node_id;
     if(node_num > node_length){
         C_node_id.node_index = node_length - (node_num - constraint.node_id.node_index);
     }
-    LOG(INFO) << "node num is " << node_num;
-    LOG(INFO) << constraint.node_id << "Constraint node id is" << C_node_id;
+//    LOG(INFO) << "node num is " << node_num;
+//    LOG(INFO) << constraint.node_id << "Constraint node id is" << C_node_id;
     problem.AddResidualBlock(
             new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
                     new SpaCostFunction(constraint.pose)),
@@ -218,7 +213,6 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
                     .at(C_submap_id.submap_index).data(),
             C_nodes.at(C_node_id.trajectory_id)
                     .at(C_node_id.node_index).data());
-    LOG(INFO) << "Add Residual Block";
 //    problem.AddResidualBlock(
 //        new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
 //            new SpaCostFunction(constraint.pose)),
@@ -287,7 +281,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     for (size_t node_data_index = 0;
          node_data_index != node_data_[trajectory_id].size();
          ++node_data_index) {
-      node_data_[trajectory_id][node_data_index].point_cloud_pose =
+          node_data_[trajectory_id][node_data_index].point_cloud_pose =
           ToPose(C_nodes[trajectory_id][node_data_index]);
     }
   }

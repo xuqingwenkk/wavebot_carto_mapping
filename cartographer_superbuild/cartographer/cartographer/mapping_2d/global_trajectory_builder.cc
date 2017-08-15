@@ -37,7 +37,6 @@ void GlobalTrajectoryBuilder::AddRangefinderData(
   if (insertion_result == nullptr) {
     return;
   }
-  LOG(INFO) << "Add Scan";
   sparse_pose_graph_->AddScan(
       insertion_result->time, insertion_result->tracking_to_tracking_2d,
       insertion_result->range_data_in_tracking_2d,
