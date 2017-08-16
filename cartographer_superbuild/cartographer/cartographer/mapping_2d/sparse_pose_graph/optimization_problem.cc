@@ -201,8 +201,8 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     if(node_num > node_length){
         C_node_id.node_index = node_length - (node_num - constraint.node_id.node_index);
     }
-//    LOG(INFO) << "node num is " << node_num;
-//    LOG(INFO) << constraint.node_id << "Constraint node id is" << C_node_id;
+//    LOG(INFO) << "node num is " << node_num << "submap num is " << submap_num;
+//    LOG(INFO) << constraint.node_id << " Constraint node id is" << C_node_id;
     problem.AddResidualBlock(
             new ceres::AutoDiffCostFunction<SpaCostFunction, 3, 3, 3>(
                     new SpaCostFunction(constraint.pose)),
@@ -256,6 +256,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
     }
   }
 
+  LOG(INFO) << "Solve 5......";
   // Solve.
   ceres::Solver::Summary summary;
   ceres::Solve(
@@ -285,6 +286,7 @@ void OptimizationProblem::Solve(const std::vector<Constraint>& constraints,
           ToPose(C_nodes[trajectory_id][node_data_index]);
     }
   }
+  LOG(INFO) << "Solve 5......";
 }
 
 const std::vector<std::deque<NodeData>>& OptimizationProblem::node_data()

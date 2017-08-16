@@ -210,7 +210,6 @@ LocalTrajectoryBuilder::AddAccumulatedRangeData(
   active_submaps_.InsertRangeData(
       TransformRangeData(range_data_in_tracking_2d,
                          transform::Embed3D(pose_estimate_2d.cast<float>())));
-
   return common::make_unique<InsertionResult>(InsertionResult{
       time, std::move(insertion_submaps), tracking_to_tracking_2d,
       range_data_in_tracking_2d, pose_estimate_2d});

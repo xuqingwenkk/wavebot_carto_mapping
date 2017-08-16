@@ -173,7 +173,6 @@ void ConstraintBuilder::ComputeConstraint(
       GetSubmapScanMatcher(submap_id);
   const sensor::PointCloud filtered_point_cloud =
       adaptive_voxel_filter_.Filter(compressed_point_cloud->Decompress());
-
   // The 'constraint_transform' (submap i <- scan j) is computed from:
   // - a 'filtered_point_cloud' in scan j,
   // - the initial guess 'initial_pose' for (map <- scan j),
@@ -229,7 +228,6 @@ void ConstraintBuilder::ComputeConstraint(
                                     options_.loop_closure_translation_weight(),
                                     options_.loop_closure_rotation_weight()},
                                    Constraint::INTER_SUBMAP});
-
   if (options_.log_matches()) {
     std::ostringstream info;
     info << "Node " << node_id << " with " << filtered_point_cloud.size()
